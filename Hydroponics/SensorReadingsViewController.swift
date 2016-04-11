@@ -15,6 +15,7 @@ class SensorReadingsViewController: UIViewController {
     //MARK: Views
     @IBOutlet weak var timeRangeSegmentedControl: UISegmentedControl!
     @IBOutlet weak var scrollView: UIScrollView!
+    
     var refreshControl = UIRefreshControl()
     var containerView: UIView!
     
@@ -49,10 +50,6 @@ class SensorReadingsViewController: UIViewController {
         humidityView.sensorLabel.text = "Humidity"
         lightView.sensorLabel.text = "Light"
         soilHumidityView.sensorLabel.text = "Soil humidity"
-        
-//        temperatureView.currentValueLabel.text = "22.5 Celsius"
-//        humidityView.currentValueLabel.text = "56 %"
-//        lightView.currentValueLabel.text = "224 lux"
     }
     
     func setupScrollView() {
@@ -82,10 +79,10 @@ class SensorReadingsViewController: UIViewController {
         constraints.appendContentsOf(NSLayoutConstraint.constraintsWithVisualFormat("H:|-[soil]-|", options: [], metrics: nil, views: views))
         
         constraints.appendContentsOf(NSLayoutConstraint.constraintsWithVisualFormat(
-            "V:|[temp(240)]-[hum(240)]-[light(240)]-[soil(240)]",
-            options: [],
-            metrics: nil,
-            views: views
+                "V:|[temp(240)]-[hum(240)]-[light(240)]-[soil(240)]",
+                options: [],
+                metrics: nil,
+                views: views
             )
         )
         
@@ -101,8 +98,7 @@ class SensorReadingsViewController: UIViewController {
             self.retrieveDataForTimeRange(timeRange: range)
             UIView.animateWithDuration(0.6, animations: {
                 self.containerView.alpha = 0
-            }) {
-                _ in
+            }) { _ in
                 self.temperatureView.timeAgoLabel.text = range.timeAgo
                 self.humidityView.timeAgoLabel.text = range.timeAgo
                 self.soilHumidityView.timeAgoLabel.text = range.timeAgo
@@ -112,26 +108,26 @@ class SensorReadingsViewController: UIViewController {
     }
     
     func retrieveDataForTimeRange(timeRange range: TimeRange) {
-        
-        HydroponicsFactory.sharedInstance.requestDataInTimeRange(timeRange: range) {
-            devices, error in
-            
-            UIApplication.sharedApplication().networkActivityIndicatorVisible = false
-            if error == nil {
-                dispatch_async(dispatch_get_main_queue(), {
-                    UIView.animateWithDuration(0.6, animations: {
-                        self.containerView.alpha = 1
-                    }) {_ in
-                        
-                    }
-                })
+        let qualityOfServiceClass = QOS_CLASS_BACKGROUND
+        let backgroundQueue = dispatch_get_global_queue(qualityOfServiceClass, 0)
+        dispatch_async(backgroundQueue, {
+            HydroponicsFactory.sharedInstance.requestDataInTimeRange(timeRange: range) {
+                [weak self] devices, error in
                 
-                if let device = devices?.first {
-                    self.device = device
+                UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                if error == nil {
+                    dispatch_async(dispatch_get_main_queue(), {
+                        if let device = devices?.first {
+                            self?.device = device
+                        }
+                        self?.refreshControl.endRefreshing()
+                        UIView.animateWithDuration(0.6) {
+                            self?.containerView.alpha = 1
+                        }
+                    })
                 }
-                self.refreshControl.endRefreshing()
             }
-        }
+        })
     }
     
     func updateViewsWithDevice() {
@@ -142,7 +138,6 @@ class SensorReadingsViewController: UIViewController {
                 self.lightView.data = device.dataCollection[.NaturalLight]!
                 self.soilHumidityView.data = device.dataCollection[.SoilHumidity]!
             })
-            
         }
     }
     

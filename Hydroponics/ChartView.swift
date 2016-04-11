@@ -19,13 +19,12 @@ class ChartView: UIView {
     lazy var chartView: LineChartView = {
         let chart = LineChartView()
         chart.translatesAutoresizingMaskIntoConstraints = false
-        chart.gridBackgroundColor = UIColor.clearColor()
-        chart.legend.enabled = false
+        chart.gridBackgroundColor = .clearColor()
         chart.xAxis.enabled = true
         chart.rightAxis.enabled = false
         chart.xAxis.drawAxisLineEnabled = true
-        chart.leftAxis.drawAxisLineEnabled = false
-        chart.leftAxis.labelTextColor = UIColor(red:0.36, green:0.43, blue:0.49, alpha:1.00)
+        chart.leftAxis.drawAxisLineEnabled = true
+        chart.leftAxis.labelTextColor = .blackColor() //UIColor(red:0.36, green:0.43, blue:0.49, alpha:1.00)
         chart.leftAxis.valueFormatter = self.numberFormatter
         chart.leftAxis.drawTopYLabelEntryEnabled = true
         chart.extraTopOffset = 10
