@@ -1,0 +1,3 @@
+github "cityos/CoreCityOS"
+github "danielgindi/Charts" ~> 2.2.4
+github "realm/realm-cocoa"
